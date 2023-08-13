@@ -3,6 +3,8 @@ import CreateShipmentValidator from 'App/Validators/CreateShipmentValidator'
 import Shipment from 'App/Models/Shipment'
 import ShipmentPackage from 'App/Models/ShipmentPackage'
 import UpdateShipmentValidator from 'App/Validators/UpdateShipmentValidator'
+import Database from '@ioc:Adonis/Lucid/Database'
+
 
 export default class ShipmentsController {
 
@@ -61,6 +63,37 @@ export default class ShipmentsController {
         await shipment.delete()
         return response.ok({
             message: "Shipment deleted successfully"})
+    }
+
+    public async tracking({response, params }) {
+        const Shipment = await Database.from("shipments")
+          .where("shipment_id", params.id)
+          .select(
+            "shipment_id",
+            "sender_name",
+            "sender_address",
+            "receiver_name",
+            "receiver_address",
+            "receiver_phone"
+          )
+          .first();
+          if (!Shipment) {
+            return response.notFound({ message: "Shipment not found" });
+        }
+
+        const ShipmentPackage = await Database.from("shipment_packages")
+        .where("shipment_id", Shipment.shipment_id)
+          .select(
+            "shipment_id",
+            "package_id",
+            "package_weight"
+          )
+
+        return response.ok({
+            shipment_detail: Shipment,
+            shipment_package: ShipmentPackage
+
+    });
     }
 }
     

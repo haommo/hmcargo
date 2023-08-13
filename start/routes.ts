@@ -9,6 +9,7 @@ Route.group(() => {
   Route.get('shipments/:id', 'ShipmentsController.show')
   Route.patch('shipments/:id', 'ShipmentsController.update')
   Route.delete('shipments/:id', 'ShipmentsController.destroy')
+  Route.get('tracking/:id', 'ShipmentsController.tracking')
 
   Route.get('manifests', 'ManifestsController.index')
   Route.post('manifests', 'ManifestsController.store')
