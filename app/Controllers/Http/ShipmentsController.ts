@@ -164,7 +164,7 @@ export default class ShipmentsController {
         }
 
         const ShipmentPackage = await Database.from("shipment_packages")
-        .where("shipment_id", Shipment.shipment_id)
+        .where("shipment_id", params.id)
           .select(
             "shipment_id",
             "package_id",
@@ -175,7 +175,7 @@ export default class ShipmentsController {
             const manifestHistories: EnumManifestItem[] = [];
             const manifestAnotherHistory = await Database
             .from('manifest_packages')
-            .join('manifest_histories', (query) => {
+            .join('manifest_histories', (query) => { 
               query
                 .on('manifest_histories.manifest_id', '=', 'manifest_packages.manifest_id')
                 .andOnVal('manifest_packages.package_id', '=', shipment.package_id)
@@ -232,7 +232,7 @@ export default class ShipmentsController {
 
                 
                 ShipmentPackDetail[index] = {
-                  shipment_id: shipment.shipment_id,
+                  shipment_id: params.id,
                   package_id: shipment.package_id,
                   package_weight: shipment.package_weight,
                   package_history: manifestHistories
@@ -247,7 +247,7 @@ export default class ShipmentsController {
           
           return response.ok({
             shipment_detail: Shipment,
-            ShipmentPackDetail: ShipmentPackDetail                
+            shipment_package: ShipmentPackDetail                
           });
           
     }
