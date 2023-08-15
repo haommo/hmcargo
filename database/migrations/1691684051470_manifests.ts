@@ -12,8 +12,8 @@ export default class extends BaseSchema {
       table.string('manifest_airline')
       table.string('total_package')
       table.string('manifest_status')
-      table.timestamp('created_at', { useTz: true })
-      table.timestamp('updated_at', { useTz: true })
+      table.timestamp('created_at', { useTz: true }).notNullable().defaultTo(this.now())
+      table.timestamp('updated_at', { useTz: true }).notNullable().defaultTo(this.now())
     })
   }
 

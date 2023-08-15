@@ -1,5 +1,6 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column } from '@ioc:Adonis/Lucid/Orm'
+import { BaseModel, column, hasMany, HasMany } from '@ioc:Adonis/Lucid/Orm'
+import ShipmentPackage from 'App/Models/ShipmentPackage'
 
 export default class Shipment extends BaseModel {
   @column({ isPrimary: true })
@@ -11,6 +12,9 @@ export default class Shipment extends BaseModel {
   @column()
   public shipmentDate: DateTime
 
+  @column()
+  public orderDate: DateTime
+  
   @column()
   public senderName: string
 
@@ -34,4 +38,9 @@ export default class Shipment extends BaseModel {
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   public updatedAt: DateTime
+
+  @hasMany(() => ShipmentPackage , {
+    foreignKey: 'package_id', 
+  })
+  public shipmentPackages: HasMany<typeof ShipmentPackage>
 }

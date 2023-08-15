@@ -11,8 +11,8 @@ export default class extends BaseSchema {
       table.string('history_status')
       table.string('history_detail')
       table.string('history_location')
-      table.timestamp('created_at', { useTz: true })
-      table.timestamp('updated_at', { useTz: true })
+      table.timestamp('created_at', { useTz: true }).notNullable().defaultTo(this.now())
+      table.timestamp('updated_at', { useTz: true }).notNullable().defaultTo(this.now())
     })
   }
 

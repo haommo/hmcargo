@@ -2,9 +2,30 @@ import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import CreateShipmentValidator from 'App/Validators/CreateShipmentValidator'
 import Shipment from 'App/Models/Shipment'
 import ShipmentPackage from 'App/Models/ShipmentPackage'
+
 import UpdateShipmentValidator from 'App/Validators/UpdateShipmentValidator'
 import Database from '@ioc:Adonis/Lucid/Database'
+const { parse, format } = require('date-fns')
 
+const ShipmentPackDetail: EnumShipPackageItem[] = [{
+  shipment_id: '',
+  package_id: '',
+  package_weight: '',
+  package_history: []
+}];
+
+interface EnumManifestItem {  
+  history_date: Date;
+  history_status: string;
+  history_detail: string;
+  history_location:string;
+}
+interface EnumShipPackageItem {
+  shipment_id: string,
+  package_id: string,
+  package_weight: string,
+  package_history: EnumManifestItem[]
+}
 
 export default class ShipmentsController {
 
@@ -65,8 +86,69 @@ export default class ShipmentsController {
             message: "Shipment deleted successfully"})
     }
 
-    public async tracking({response, params }) {
-        const Shipment = await Database.from("shipments")
+    public async tracking({params, response }) {                
+      const axios = require('axios');
+
+      // const manifestIDs = await Database
+      //   .from('manifest_packages')
+      //   .join('shipment_packages', (query) => {
+      //     query
+      //       .on('shipment_packages.package_id', '=', 'manifest_packages.package_id')
+      //       .andOnVal('shipment_packages.shipment_id', '=', params.id)
+      //   })
+      //   .select('manifest_packages.manifest_id', 'manifest_packages.package_id')
+      
+      // const promises = manifestIDs.map(async (shipment, index) => {
+      //   try {
+      //     const apiUrl = 'https://api.myems.vn/TrackAndTraceItemCode?itemcode=' + shipment.package_id + '&language=0'
+      //     const responseItem = await axios.get(apiUrl);
+      //     const responseData = responseItem.data;
+      //     if (responseData.Code == "00") {
+      //       responseData.List_TBL_DINH_VI.forEach((packHistory, historyIndex) => {
+      
+      //         //get the history status transit or delivered
+      //         let history_status = '';
+      //         if (packHistory.TRANG_THAI.search('Phát thành công') == -1 || packHistory.TRANG_THAI.search('Phát thành công') == -1)
+      //           history_status = 'transit';
+      //         else
+      //           history_status = 'Delivered';
+      
+      //         //get the history location
+      //         let history_location = '';
+      //         const pieces = packHistory.VI_TRI.trim().split(',')
+      //         history_location = pieces[pieces.length - 1]
+      
+      //         //get the history date
+      //         let history_date = new Date();
+      //         const myDate = parse(packHistory.NGAY, 'd/MM/yyyy', new Date())
+      //         history_date = format(myDate, 'yyyy-MM-dd')
+      
+      //         //get the history detail
+      //         let history_detail = '';
+      //         let pos = packHistory.TRANG_THAI.indexOf('(');
+      //         history_detail = packHistory.TRANG_THAI.slice(0, pos);
+      
+      //         manifestHistories.push({
+      //           id: shipment.manifest_id,
+      //           history_date: history_date,
+      //           history_status: history_status,
+      //           history_detail: history_detail,
+      //           history_location: history_location
+      //         });
+      //       });
+      //     }
+      //   } catch (error) {
+      //     console.error(error);
+      //   }
+      // });
+      
+      // await Promise.all(promises);
+      
+      // return response.ok({
+      //   manifestHistories: manifestHistories
+      // });        
+      
+      const Shipment = await Database.from("shipments")
           .where("shipment_id", params.id)
           .select(
             "shipment_id",
@@ -88,12 +170,86 @@ export default class ShipmentsController {
             "package_id",
             "package_weight"
           )
+        
+          const promises1 = ShipmentPackage.map(async (shipment, index) => {
+            const manifestHistories: EnumManifestItem[] = [];
+            const manifestAnotherHistory = await Database
+            .from('manifest_packages')
+            .join('manifest_histories', (query) => {
+              query
+                .on('manifest_histories.manifest_id', '=', 'manifest_packages.manifest_id')
+                .andOnVal('manifest_packages.package_id', '=', shipment.package_id)
+            })
+            .select('manifest_histories.history_date', 'manifest_histories.history_status', 'manifest_histories.history_detail', 'manifest_histories.history_location')
+          
+            manifestAnotherHistory.forEach(element => {
+              manifestHistories.push({                  
+                history_date: element.history_date,
+                history_status: element.history_status,
+                history_detail: element.history_detail,
+                history_location: element.history_location
+              });
+            });  
+            try {
+              const apiUrl = 'https://api.myems.vn/TrackAndTraceItemCode?itemcode=' + shipment.package_id + '&language=0'
+              const responseItem = await axios.get(apiUrl);
+              const responseData = responseItem.data;            
+              console.log(responseData)
+          
+              if (responseData.Code == "00") {
+                
+          
+                responseData.List_TBL_DINH_VI.forEach((packHistory, historyIndex) => {
+                  //get the history status transit or delivered
+                  let history_status = '';
+                  if (packHistory.TRANG_THAI.search('Phát thành công') == -1 || packHistory.TRANG_THAI.search('Phát thành công') == -1)
+                    history_status = 'transit';
+                  else
+                    history_status = 'Delivered';
+          
+                  //get the history location
+                  let history_location = '';
+                  const pieces = packHistory.VI_TRI.trim().split(',')
+                  history_location = pieces[pieces.length - 1]
+          
+                  //get the history date
+                  let history_date = new Date();
+                  const myDate = parse(packHistory.NGAY, 'd/MM/yyyy', new Date())
+                  history_date = format(myDate, 'yyyy-MM-dd')
+          
+                  //get the history detail
+                  let history_detail = '';
+                  let pos = packHistory.TRANG_THAI.indexOf('(');
+                  history_detail = packHistory.TRANG_THAI.slice(0, pos);
+                  
+                  manifestHistories.push({                  
+                    history_date: history_date,
+                    history_status: history_status,
+                    history_detail: history_detail,
+                    history_location: history_location
+                  });
+                });                         
 
-        return response.ok({
+                
+                ShipmentPackDetail[index] = {
+                  shipment_id: shipment.shipment_id,
+                  package_id: shipment.package_id,
+                  package_weight: shipment.package_weight,
+                  package_history: manifestHistories
+                }
+              }
+            } catch (error) {
+              console.error(error);
+            }
+          });
+          
+          await Promise.all(promises1);
+          
+          return response.ok({
             shipment_detail: Shipment,
-            shipment_package: ShipmentPackage
-
-    });
+            ShipmentPackDetail: ShipmentPackDetail                
+          });
+          
     }
 }
     

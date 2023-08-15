@@ -8,8 +8,8 @@ export default class extends BaseSchema {
       table.increments('id')
       table.string('manifest_id').references('manifest_id').inTable('manifests').onDelete('CASCADE')
       table.string('package_id').unique().references('package_id').inTable('shipment_packages').onDelete('CASCADE')
-      table.timestamp('created_at', { useTz: true })
-      table.timestamp('updated_at', { useTz: true })
+      table.timestamp('created_at', { useTz: true }).notNullable().defaultTo(this.now())
+      table.timestamp('updated_at', { useTz: true }).notNullable().defaultTo(this.now())
     })
   }
 

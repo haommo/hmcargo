@@ -1,5 +1,7 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column } from '@ioc:Adonis/Lucid/Orm'
+import { BaseModel, column, BelongsTo, belongsTo, hasOne, HasOne } from '@ioc:Adonis/Lucid/Orm'
+import Shipment from 'App/Models/Shipment'
+import ManifestPackage from 'App/Models/ManifestPackage'
 
 export default class ShipmentPackage extends BaseModel {
   
@@ -23,4 +25,12 @@ export default class ShipmentPackage extends BaseModel {
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   public updatedAt: DateTime
+
+  @belongsTo(() => Shipment)
+  public shipment: BelongsTo<typeof Shipment>
+
+  @hasOne(() => ManifestPackage, {
+    foreignKey: 'packageId',
+  })  
+  public manifestPackage: HasOne<typeof ManifestPackage>
 }

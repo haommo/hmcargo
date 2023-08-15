@@ -10,8 +10,8 @@ export default class extends BaseSchema {
       table.string('package_id').unique().notNullable()
       table.string('package_weight')
       table.string('package_content')
-      table.timestamp('created_at', { useTz: true })
-      table.timestamp('updated_at', { useTz: true })
+      table.timestamp('created_at', { useTz: true }).notNullable().defaultTo(this.now())
+      table.timestamp('updated_at', { useTz: true }).notNullable().defaultTo(this.now())
     })
   }
 

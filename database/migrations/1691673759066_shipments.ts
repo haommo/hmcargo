@@ -8,14 +8,15 @@ export default class extends BaseSchema {
       table.increments('id').primary()
       table.string('shipment_id').notNullable().unique()
       table.dateTime('shipment_date')
+      table.dateTime('order_date')
       table.string('total_package')
       table.string('sender_name')
       table.string('sender_address')
       table.string('receiver_name')
       table.string('receiver_address')
       table.string('receiver_phone')
-      table.timestamp('created_at', { useTz: true })
-      table.timestamp('updated_at', { useTz: true })
+      table.timestamp('created_at', { useTz: true }).notNullable().defaultTo(this.now())
+      table.timestamp('updated_at', { useTz: true }).notNullable().defaultTo(this.now())
     })
   }
 

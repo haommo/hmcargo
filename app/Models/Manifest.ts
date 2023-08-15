@@ -1,5 +1,6 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column } from '@ioc:Adonis/Lucid/Orm'
+import { BaseModel, column, hasMany, HasMany } from '@ioc:Adonis/Lucid/Orm'
+import ManifestPackage from 'App/Models/ManifestPackage'
 
 export default class Manifest extends BaseModel {
   @column({ isPrimary: true })
@@ -28,4 +29,9 @@ export default class Manifest extends BaseModel {
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   public updatedAt: DateTime
+
+  @hasMany(() => ManifestPackage, {
+    foreignKey: 'manifest_id',
+  })
+  public manifestPackages: HasMany<typeof ManifestPackage>
 }
