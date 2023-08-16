@@ -192,52 +192,67 @@ export default class ShipmentsController {
             });  
             try {
               const apiUrl = 'https://api.myems.vn/TrackAndTraceItemCode?itemcode=' + shipment.package_id + '&language=0'
-              const responseItem = await axios.get(apiUrl);
-              const responseData = responseItem.data;            
-              console.log(responseData)
-          
-              if (responseData.Code == "00") {
-                
-          
-                responseData.List_TBL_DINH_VI.forEach((packHistory, historyIndex) => {
-                  //get the history status transit or delivered
-                  let history_status = '';
-                  if (packHistory.TRANG_THAI.search('Phát thành công') == -1 || packHistory.TRANG_THAI.search('Phát thành công') == -1)
-                    history_status = 'transit';
-                  else
-                    history_status = 'Delivered';
-          
-                  //get the history location
-                  let history_location = '';
-                  const pieces = packHistory.VI_TRI.trim().split(',')
-                  history_location = pieces[pieces.length - 1]
-          
-                  //get the history date
-                  let history_date = new Date();
-                  const myDate = parse(packHistory.NGAY, 'd/MM/yyyy', new Date())
-                  history_date = format(myDate, 'yyyy-MM-dd')
-          
-                  //get the history detail
-                  let history_detail = '';
-                  let pos = packHistory.TRANG_THAI.indexOf('(');
-                  history_detail = packHistory.TRANG_THAI.slice(0, pos);
-                  
-                  manifestHistories.push({                  
-                    history_date: history_date,
-                    history_status: history_status,
-                    history_detail: history_detail,
-                    history_location: history_location
-                  });
-                });                         
+              // const responseItem = await axios.get(apiUrl);
+              // const responseData = responseItem.data;            
+              // console.log('responseData==================>', responseItem.code)
 
-                
+              await axios.get(apiUrl)
+              .then(responseData => {
+                // Check if data is present in the response
+                if (response.data) {
+                  responseData.List_TBL_DINH_VI.forEach((packHistory, historyIndex) => {
+                    //get the history status transit or delivered
+                    let history_status = '';
+                    if (packHistory.TRANG_THAI.search('Phát thành công') == -1 || packHistory.TRANG_THAI.search('Phát thành công') == -1)
+                      history_status = 'transit';
+                    else
+                      history_status = 'Delivered';
+            
+                    //get the history location
+                    let history_location = '';
+                    const pieces = packHistory.VI_TRI.trim().split(',')
+                    history_location = pieces[pieces.length - 1]
+            
+                    //get the history date
+                    let history_date = new Date();
+                    const myDate = parse(packHistory.NGAY, 'd/MM/yyyy', new Date())
+                    history_date = format(myDate, 'yyyy-MM-dd')
+            
+                    //get the history detail
+                    let history_detail = '';
+                    let pos = packHistory.TRANG_THAI.indexOf('(');
+                    history_detail = packHistory.TRANG_THAI.slice(0, pos);
+                    
+                    manifestHistories.push({                  
+                      history_date: history_date,
+                      history_status: history_status,
+                      history_detail: history_detail,
+                      history_location: history_location
+                    });
+                  });                         
+  
+                  
+                  ShipmentPackDetail[index] = {
+                    shipment_id: params.id,
+                    package_id: shipment.package_id,
+                    package_weight: shipment.package_weight,
+                    package_history: manifestHistories
+                  }
+                } else {
+                  // Handle the case where no data is present in the response
+                }
+              })
+              .catch(error => {
+                // Handle the API error
                 ShipmentPackDetail[index] = {
                   shipment_id: params.id,
                   package_id: shipment.package_id,
                   package_weight: shipment.package_weight,
                   package_history: manifestHistories
                 }
-              }
+                console.error(error);
+
+              });                       
             } catch (error) {
               console.error(error);
             }
