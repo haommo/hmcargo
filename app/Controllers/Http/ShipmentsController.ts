@@ -112,9 +112,10 @@ export default class ShipmentsController {
             "package_id",
             "package_weight"
           )    
-          const ShipmentPackDetail = [];              
+          const ShipmentPackDetail:EnumShipPackageItem[] = [];     
+                
           const promises1 = ShipmentPackage.map(async (shipment, index) => {
-                      
+            const manifestHistories:EnumManifestItem[] = []; 
             const manifestAnotherHistory = await Database
             .from('manifest_packages')
             .join('manifest_histories', (query) => { 
